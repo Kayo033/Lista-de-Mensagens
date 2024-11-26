@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRUD Básico</title>
+</head>
+
+<body>
+    <h1>Gerenciador de Mensagens</h1>
+
+    <!-- Formulário para criar uma mensagem -->
+    <input id="novaMensagem" type="text" placeholder="Digite uma nova mensagem">
+    <button id="btnCriar">Criar Mensagem</button>
+
+    <h2>Mensagens:</h2>
+    <ul id="listaMensagens"></ul>
+
+    <script>
+        const apiUrl = "http://127.0.0.1:5000/mensagens";
+
+        // 1. Criar uma mensagem
+        document.getElementById("btnCriar").addEventListener("click", function () {
+            const texto = document.getElementById("novaMensagem").value;
+            if (!texto) return alert("Digite uma mensagem!");
+
+            fetch(apiUrl, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ texto })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    alert("Mensagem criada!");
+                    carregarMensagens();
+                })
+                .catch(error => console.error("Erro ao criar mensagem:", error));
+        });
+
+        // 2. Ler mensagens e exibir na página
+        function carregarMensagens() {
+            fetch(apiUrl)
+                .then(response => response.json())
+                .then(data => {
+                    const lista = document.getElementById("listaMensagens");
+                    lista.innerHTML = ""; // Limpa a lista
+                    data.forEach(msg => {
+                        const li = document.createElement("li");
+                        li.innerHTML = `
+                            ID: ${msg.id} - Texto: ${msg.texto} 
+                            <button onclick="atualizarMensagem(${msg.id})">Editar</button>
+                            <button onclick="excluirMensagem(${msg.id})">Excluir</button>
+                        `;
+                        lista.appendChild(li);
+                    });
+                })
+                .catch(error => console.error("Erro ao carregar mensagens:", error));
+        }
+
+        // 3. Atualizar uma mensagem
+        function atualizarMensagem(id) {
+            const novoTexto = prompt("Digite o novo texto da mensagem:");
+            if (!novoTexto) return;
+
+            fetch(`${apiUrl}/${id}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ texto: novoTexto })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    alert("Mensagem atualizada!");
+                    carregarMensagens();
+                })
+                .catch(error => console.error("Erro ao atualizar mensagem:", error));
+        }
+
+        // 4. Excluir uma mensagem
+        function excluirMensagem(id) {
+            fetch(`${apiUrl}/${id}`, { method: "DELETE" })
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.message);
+                    carregarMensagens();
+                })
+                .catch(error => console.error("Erro ao excluir mensagem:", error));
+        }
+
+        // Carregar as mensagens ao abrir a página
+        carregarMensagens();
+    </script>
+</body>
+
+</html>
